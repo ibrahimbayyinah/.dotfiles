@@ -1,0 +1,12 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhistcnt =0
+let g:netrw_dirhist_0='/home/archo/.dotfiles/.git'
+let g:netrw_dirhist_9='/home/archo/temptest/gitrepotest'
+let g:netrw_dirhist_8='/home/archo/docs/islam/arabic-font/Latex-Utilities'
+let g:netrw_dirhist_7='/home/archo/docs/islam/arabic-font'
+let g:netrw_dirhist_6='/home/archo/temptest/gitrepotest'
+let g:netrw_dirhist_5='/home/archo/temptest/latexdoc/arabic/example'
+let g:netrw_dirhist_4='/home/archo/programs/suckless/dwm'
+let g:netrw_dirhist_3='/mnt/usb/1/2de/electro/laptopspc/macbookpro14/up'
+let g:netrw_dirhist_2='/mnt/usb/1/2de/electro/laptopspc/macbookpro14'
+let g:netrw_dirhist_1='/home/archo/ertugrul/2'
