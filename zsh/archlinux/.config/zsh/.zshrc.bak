@@ -1,0 +1,31 @@
+# The following lines were added by compinstall
+
+zstyle ':completion:*' auto-description 'Specify: %d'
+zstyle ':completion:*' completer _complete _ignored
+zstyle ':completion:*' expand suffix
+zstyle ':completion:*' format 'Completing %d'
+zstyle ':completion:*' list-colors ''
+zstyle ':completion:*' list-prompt '%SAt %p: Hit TAB for more, or the character to insert%s'
+zstyle ':completion:*' menu select=0
+zstyle ':completion:*' preserve-prefix '//[^/]##/'
+zstyle ':completion:*' select-prompt '%SScrolling active: current selection at %p%s'
+zstyle :compinstall filename '/home/archo/.zshrc'
+
+autoload -Uz compinit
+compinit
+# End of lines added by compinstall
+# Lines configured by zsh-newuser-install
+HISTFILE=~/.histfile
+HISTSIZE=1000
+SAVEHIST=5000
+setopt autocd notify
+bindkey -v
+# End of lines configured by zsh-newuser-install
+
+# Lines added by archo
+autoload -U colors && colors
+#PS1=$'[\u@\h \W]\$ '
+# export PS1
+
+alias ls='ls --color=auto'
+# End of lines added by archo
