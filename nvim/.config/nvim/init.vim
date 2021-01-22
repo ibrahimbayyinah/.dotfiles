@@ -102,3 +102,23 @@ nnoremap <leader>p :call CompileLatexDoc()<cr>
 
  " <leader>d to delete the current line and save it to the clipboard
 nnoremap <leader>d :d+<cr>
+
+" Open current line in web browser and delete line:
+" function! OpenURL()
+" 	:d+<cr>
+" 	!python -m webbrowser -t <C-r>"+<cr>
+" endfunction
+" nnoremap <leader>o :call OpenURL()<cr>
+"
+function! HandleURL()
+	" let s:uri = matchstr(getline("."), '[a-z]*:\/\/[^ >,;]*')
+	let s:uri = getline(".")
+	echo s:uri
+	if s:uri != ""
+		silent exec "!brave --incognito '".s:uri."'"
+	else
+		echo "No URI found in line."
+	endif
+	normal! dd
+endfunction
+map <leader>o :call HandleURL()<cr>
