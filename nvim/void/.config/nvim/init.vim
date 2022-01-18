@@ -5,6 +5,7 @@
 
  " call plug#end()
 
+ " Plugins. Managed by vim-plug
 call plug#begin('~/.local/share/nvim/plugged')
 Plug 'https://github.com/vim-scripts/AutoComplPop'
 Plug 'https://github.com/gruvbox-community/gruvbox'
