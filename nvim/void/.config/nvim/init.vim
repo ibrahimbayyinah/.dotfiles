@@ -6,6 +6,9 @@
  " call plug#end()
 
  " Plugins. Managed by vim-plug
+ " To install:
+ " $ sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs \
+ "     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
 call plug#begin('~/.local/share/nvim/plugged')
 Plug 'https://github.com/vim-scripts/AutoComplPop'
 Plug 'https://github.com/gruvbox-community/gruvbox'
