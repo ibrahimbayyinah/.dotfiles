@@ -18,12 +18,14 @@ Plug 'https://github.com/gruvbox-community/gruvbox'
 " Plug 'xuhdev/vim-latex-live-preview'
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-lua/popup.nvim'
-" Plug 'nvim-telescope/telescope.nvim'
-" Plug 'https://github.com/nvim-treesitter/nvim-treesitter'
-" lsp
+Plug 'nvim-telescope/telescope.nvim'
+" Extra (optional) dependencies for telescope: `ripgrep` and `fd`
+" remaps for telescope in the `plugins` directory
+Plug 'https://github.com/nvim-treesitter/nvim-treesitter'
+Plug 'nvim-treesitter/playground'
 " Neovim Tree shitter
 " Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
-" Plug 'nvim-treesitter/playground'
+" lsp
 "
 " Plug 'mbbill/undotree'
 "
