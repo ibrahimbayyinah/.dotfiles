@@ -12,11 +12,12 @@
  " Then run :PlugInstall in neovim
  "
 call plug#begin('~/.local/share/nvim/plugged')
-Plug 'https://github.com/vim-scripts/AutoComplPop'
+" Plug 'https://github.com/vim-scripts/AutoComplPop'
 Plug 'https://github.com/gruvbox-community/gruvbox'
 " Plug 'morhetz/gruvbox'
 " Plug 'xuhdev/vim-latex-live-preview'
-" Plug 'nvim-lua/plenary.nvim'
+Plug 'nvim-lua/plenary.nvim'
+Plug 'nvim-lua/popup.nvim'
 " Plug 'nvim-telescope/telescope.nvim'
 " Plug 'https://github.com/nvim-treesitter/nvim-treesitter'
 " lsp
