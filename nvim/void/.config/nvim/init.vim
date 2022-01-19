@@ -30,6 +30,11 @@ Plug 'nvim-treesitter/playground'
 " Plug 'mbbill/undotree'
 "
 " Plug 'https://github.com/tpope/vim-fugitive'
+Plug 'scrooloose/nerdtree'
+Plug 'OmniSharp/omnisharp-vim'
+" Plug 'neovim/nvim-lspconfig'
+" Plug 'hrsh7th/nvim-cmp'
+" Plug 'hrsh7th/cmp-nvim-lsp'
 call plug#end()
 " ----------------------------------------------
  " BASIC STUFF
@@ -145,6 +150,13 @@ inoremap <expr> <CR> pumvisible() ? "<C-y>" :"<CR>"
 " Cancel the complete menu item like CTRL+e would.
 inoremap <expr> <Left> pumvisible() ? "<C-e>" : "<Left>"
 
+" Omnisharp bindings:
+" Tab completion when previous character is not whitespace or newline char:
+" (from: https://medium.com/@kpereksta/setting-up-a-c-development-environment-with-vim-on-debian-ea42d5b810 
+" or: https://github.com/Skyl3r/debian-configs/blob/master/.vimrc )
+inoremap <expr> <Tab> pumvisible() ? '<C-n>' :
+\ getline('.')[col('.')-2] =~# '[[:alnum:].-_#$]' ? '<C-x><C-o>' : '<Tab>'
+
 
 
 " ----------------------------------------------
@@ -174,6 +186,13 @@ nnoremap <leader>p :call CompileLatexDoc()<cr>
 
  " <leader>d to delete the current line and save it to the clipboard
 nnoremap <leader>d :d+<cr>
+
+ " toggle NerdTree
+nmap <C-f> :NERDTreeToggle<CR>
+" Start NERDTree and put the cursor back in the other window.
+autocmd VimEnter * NERDTree | wincmd p
+" Exit Vim if NERDTree is the only window remaining in the only tab.
+autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | quit | endif
 
 " Open current line in web browser and delete line:
 " function! OpenURL()
