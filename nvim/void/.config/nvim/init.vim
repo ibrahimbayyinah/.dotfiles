@@ -31,7 +31,7 @@ Plug 'nvim-treesitter/playground'
 "
 " Plug 'https://github.com/tpope/vim-fugitive'
 Plug 'scrooloose/nerdtree'
-Plug 'OmniSharp/omnisharp-vim'
+" Plug 'OmniSharp/omnisharp-vim'
 " Plug 'neovim/nvim-lspconfig'
 " Plug 'hrsh7th/nvim-cmp'
 " Plug 'hrsh7th/cmp-nvim-lsp'
@@ -64,7 +64,11 @@ set undodir=~/.local/share/nvim/undo
 set undofile
 set incsearch
 set scrolloff=8 " To start scrolling when the cursor is 8 lines above the last line in the current view
-" set colorcolumn=80
+set colorcolumn=80
+" With that you might also want to do:
+" highlight ColorColumn ctermbg=4 guibg=Red
+" But put that line below the gruvbox colours configuration, or else it won't
+" work for some reason
 set signcolumn=yes " Extra column to show error signs and whatnot
 
  " using zsh as default shell
@@ -81,8 +85,17 @@ let mapleader =  " "
 
 " Set the color scheme to use Gruvbox.
 " autocmd vimenter * ++nested colorscheme gruvbox " only needed if using morhetz/gruvbox
-colorscheme gruvbox
+" To force terminal to display italics. This setting must be before
+" `colorscheme gruvbox`:
+let g:gruvbox_italic=1
+" highlight Normal guibg=none
 set termguicolors
+" To switch to light theme:
+set bg=light
+" highlight ColorColumn ctermbg=4 guibg=Red
+" Hard contrast in light mode:
+let g:gruvbox_contrast_light='soft'
+colorscheme gruvbox
 
 
 
