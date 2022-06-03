@@ -86,7 +86,7 @@ let mapleader =  " "
 " Set the color scheme to use Gruvbox.
 " autocmd vimenter * ++nested colorscheme gruvbox " only needed if using morhetz/gruvbox
 " To force terminal to display italics. This setting must be before
-" `colorscheme gruvbox`:
+" `colorscheme gruvbox` (just like all other gruvbox settings must be before it):
 let g:gruvbox_italic=1
 " highlight Normal guibg=none
 set termguicolors
