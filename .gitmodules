@@ -1,0 +1,3 @@
+[submodule "testdotss/Neovim-from-scratch"]
+	path = testdotss/Neovim-from-scratch
+	url = https://github.com/ibrahimbayyinah/Neovim-from-scratch
