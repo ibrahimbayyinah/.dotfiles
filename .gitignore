@@ -1,2 +1,5 @@
 # ignore nvim's .netrwhist file
 .netrwhist
+
+# ignore zsh's .zcompdump file
+.zcompdump
