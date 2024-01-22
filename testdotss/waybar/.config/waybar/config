@@ -10,7 +10,7 @@
     "modules-left": ["hyprland/workspaces", "hyprland/submap", "sway/scratchpad", "custom/media"],
     // "modules-center": ["hyprland/window"],
     "modules-center": ["clock"],
-    "modules-right": ["idle_inhibitor", "pulseaudio", "network", "group/hardware", "backlight", "hyprland/language", "battery", "tray"],
+    "modules-right": ["idle_inhibitor", "pulseaudio", "network", "group/hardware", "backlight", "battery", "tray"],
     // Modules configuration
     "hyprland/workspaces": {
   "format": "{name}",
@@ -198,7 +198,7 @@
             "transition-left-to-right": true,
             "children-class": "not-hardware"
         },
-        "modules": ["memory", "cpu", "temperature"]
+        "modules": ["memory", "hyprland/language", "cpu", "temperature"]
     }
 }
 
