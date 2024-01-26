@@ -1,8 +1,10 @@
+# Edited from https://github.com/ericmurphyxyz/dotfiles
+
 set previewer ~/.config/lf/lf_kitty_preview
 set cleaner ~/.config/lf/lf_kitty_clean
 
 # Basic Settings
-set hidden true
+set hidden false
 set ignorecase true
 set icons true
 
@@ -67,7 +69,7 @@ map . set hidden!
 map dd trash
 map dr restore_trash
 map p paste
-map x cut
+map d cut
 map y copy
 map <enter> open
 map R reload
@@ -77,11 +79,13 @@ map bg setwallpaper
 map C clear
 
 # Movement
-map gD cd ~/documents
-map gd cd ~/downloads
-map gp cd ~/pictures
+map gd cd ~/Documents
+map gD cd ~/Downloads
+map gp cd ~/Pictures
 map gc cd ~/.config
-map gr cd ~/repos
-map gv cd ~/videos
-map gs cd ~/.local/bin
+map ga cd ${I_AUTO_DIR}
+map gk cd ~/Documents/stud/kulak
+# map gr cd ~/repos
+map gv cd ~/Videos
+map gs cd ~/.local/scripts
 map gt cd ~/.local/share/Trash/files

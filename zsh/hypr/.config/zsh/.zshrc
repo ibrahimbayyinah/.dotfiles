@@ -91,7 +91,8 @@ bindkey '^e' edit-command-line
 
 # PS1='[%n@%m %1~]%(#.#.$) '
 # PS1='%F{red}┌┌%F{blue}(%F{yellow}%n%F{red}@%F{green}%m%F{blue})%F{red}-%F{blue}(%F{red}%D{%I:%M%P}%F{blue}-:-%F{red}%D{%m}%F{blue}%F{red}/%D{%d}%F{blue})%F{red}┌-%F{blue}¨%F{red}-¨¨%F{blue}˙
-# %{%}%F{red}└┌%F{blue}(%F{magenta}%1~%F{blue})%F{red}┌¨%F{blue}˙%f'
+# %{
+# %}%F{red}└┌%F{blue}(%F{magenta}%1~%F{blue})%F{red}┌¨%F{blue}˙%f'
 # export PS1
 # autoload -Uz promptinit && promptinit
 # prompt elite
@@ -119,6 +120,8 @@ ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg[blue]%})"
 # Checking if user's local bin directory exists and isn't already in path. If both are true, prepending this directory to the PATH variable.
 [ -d $HOME/.local/bin ] && [ -z $(echo $PATH | grep -o $HOME/.local/bin) ] && export PATH="$HOME/.local/bin:${PATH}"
 [ -d $HOME/bin ] && [ -z $(echo $PATH | grep -o $HOME/bin) ] && export PATH="$HOME/bin:${PATH}"
+# Idem with local scripts directory
+[ -d $HOME/.local/scripts ] && [ -z $(echo $PATH | grep -o $HOME/.local/scripts) ] && export PATH="$HOME/.local/scripts:${PATH}"
 
 # Setting up environment variables for go:
 GOPATH="$HOME/programs/go/go_projects"; export GOPATH
@@ -153,7 +156,7 @@ GOROOT="/usr/local/go"; export GOROOT
 # rehash
 
 # TERMINAL='st'; export TERMINAL # setting the TERMINAL environment variable to be st
-TERMINAL='alacritty'; export TERMINAL # setting the TERMINAL environment variable
+TERMINAL='kitty'; export TERMINAL # setting the TERMINAL environment variable
 
 # pnpm
 export PNPM_HOME="/home/ibra/.local/share/pnpm"
