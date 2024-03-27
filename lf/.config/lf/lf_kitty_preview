@@ -10,7 +10,7 @@ preview() {
 }
 
 TEMPDIR=$XDG_CACHE_HOME/lf
-mkdir -p $TEMPDIR
+mkdir -p "$TEMPDIR"
 
 file="$1"; shift
 case "$(basename "$file" | tr '[A-Z]' '[a-z]')" in
@@ -41,7 +41,8 @@ case "$(basename "$file" | tr '[A-Z]' '[a-z]')" in
 	convert "$file" "$thumbnail"
 	preview "$thumbnail"
 	;;
-*) previewer "$file" ;;
+# *) highlight -O ansi "$file" || bat -p --theme ansi --terminal-width "$(($4-2))" -f "$1" ;;
+*) bat -p --theme ansi --wrap character --terminal-width "$((w-2))" -f "$file" ;;
 esac
 return 127 # nonzero retcode required for lf previews to reload
 

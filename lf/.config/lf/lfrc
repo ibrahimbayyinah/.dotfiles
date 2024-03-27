@@ -53,7 +53,30 @@ cmd trash ${{
 
 cmd restore_trash ${{
   trash-restore
+}
+
+cmd move-parent &{{
+    dironly="setlocal '$(dirname "$PWD")' dironly"
+    lf -remote "send $id :updir; $dironly true; $1; $dironly false; open"
 }}
+
+# cmd paste %{{
+#     set -- $(cat ~/.local/share/lf/files)
+#     mode="$1"
+#     shift
+#     case "$mode" in
+#         copy)
+#             rsync -aAHXhv --ignore-existing -P -- "$@" . |
+#             stdbuf -i0 -o0 -e0 tr '\r' '\n' |
+#             while IFS= read -r line; do
+#                 lf -remote "send $id echo $line"
+#             done
+#             ;;
+#         move) mv -n -- "$@" .;;
+#     esac
+#     rm ~/.local/share/lf/files
+#     lf -remote "send clear"
+# }}
 
 # Bindings
 map d
@@ -66,8 +89,8 @@ map ae $wine "$f"
 
 # Basic Functions
 map . set hidden!
-map dd trash
-map dr restore_trash
+map Dd trash
+map Dr restore_trash
 map p paste
 map d cut
 map y copy
@@ -83,9 +106,12 @@ map gd cd ~/Documents
 map gD cd ~/Downloads
 map gp cd ~/Pictures
 map gc cd ~/.config
-map ga cd ${I_AUTO_DIR}
+map ga $lf -remote "send $id cd $I_AUTO_DIR" # To cd into a directory specified by an environment variable
+map g2 $lf -remote "send $id cd $I_VOID_DIR"
 map gk cd ~/Documents/stud/kulak
 # map gr cd ~/repos
 map gv cd ~/Videos
 map gs cd ~/.local/scripts
 map gt cd ~/.local/share/Trash/files
+map J move-parent down
+map K move-parent up}
