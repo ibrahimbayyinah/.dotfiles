@@ -1113,8 +1113,9 @@ font_size 12.0
 #: }}}
 
 #: Color scheme {{{
-# foreground #000000
-# background #f5e5cc
+
+foreground #000000
+background #f5e5cc
 
 #: The foreground and background colors.
 
@@ -2454,9 +2455,3 @@ background_opacity 0.9
 
 #: }}}
 
-
-
-# BEGIN_KITTY_THEME
-# Gruvbox Light
-include current-theme.conf
-# END_KITTY_THEME
