@@ -4,7 +4,8 @@
 # Import colorscheme from 'wal' asynchronously
 # &   # Run the process in the background.
 # ( ) # Hide shell job control messages.
-(cat ~/.cache/wal/sequences &)
+# (cat ~/.cache/wal/sequences &)
+# . ~/.cache/wal/colors.sh
 
 # env variables
 # export XDG_CONFIG_HOME=$HOME/.config
@@ -91,8 +92,7 @@ bindkey '^e' edit-command-line
 
 # PS1='[%n@%m %1~]%(#.#.$) '
 # PS1='%F{red}┌┌%F{blue}(%F{yellow}%n%F{red}@%F{green}%m%F{blue})%F{red}-%F{blue}(%F{red}%D{%I:%M%P}%F{blue}-:-%F{red}%D{%m}%F{blue}%F{red}/%D{%d}%F{blue})%F{red}┌-%F{blue}¨%F{red}-¨¨%F{blue}˙
-# %{
-# %}%F{red}└┌%F{blue}(%F{magenta}%1~%F{blue})%F{red}┌¨%F{blue}˙%f'
+# %{%}%F{red}└┌%F{blue}(%F{magenta}%1~%F{blue})%F{red}┌¨%F{blue}˙%f'
 # export PS1
 # autoload -Uz promptinit && promptinit
 # prompt elite
@@ -105,6 +105,7 @@ setopt prompt_subst
 # PROMPT+=' %{$fg[cyan]%}%c%{$reset_color%} $(git_prompt_info)'
 
 PROMPT="%{$fg[cyan]%}%c %(?:%{$fg_bold[green]%}➜ :%{$fg_bold[red]%}➜ )"
+# PROMPT="%{$fg[#3F8D62]%}%c %(?:%{$fg_bold[${color2}]%}➜ :%{$fg_bold[${color1}]%}➜ )"
 PROMPT+='%{$reset_color%} $(git_prompt_info)'
 
 ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg_bold[blue]%}git:(%{$fg[red]%}"
