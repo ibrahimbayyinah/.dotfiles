@@ -10,7 +10,7 @@
     "modules-left": ["hyprland/workspaces", "hyprland/submap", "sway/scratchpad", "custom/media"],
     // "modules-center": ["hyprland/window"],
     "modules-center": ["clock"],
-    "modules-right": ["idle_inhibitor", "pulseaudio", "network", "group/hardware", "backlight", "hyprland/language", "battery", "tray"],
+    "modules-right": ["idle_inhibitor", "pulseaudio", "network", "group/hardware", "backlight", "hyprland/language", "battery", "custom/vkbd", "tray"],
     // Modules configuration
     "hyprland/workspaces": {
   "format": "{name}",
@@ -186,9 +186,14 @@
         // "exec": "$HOME/.config/waybar/mediaplayer.py --player spotify 2> /dev/null" // Filter player based on name
     },
     "hyprland/language": {
-    "format": "{}",
-    "format-en": "US",
-    "format-ar": "AR"
+    "format": "{layout}",
+    "format-en": "us",
+    "format-ar": "ar",
+    "format-alt": "{layout} ({variant})",
+    "variants": {
+    	"us": "us",
+	"us(intl)": "intl"
+    }
     // "keyboard-name": "at-translated-set-2-keyboard"
     },
     "group/hardware": {
@@ -199,6 +204,12 @@
             "children-class": "not-hardware"
         },
         "modules": ["memory", "cpu", "temperature"]
-    }
+    },
+    "custom/vkbd": {
+        "format": "\udb82\udc94",
+        // "rotate": ${r_deg},
+        "rotate": 90,
+        "on-click": "vkbd.sh"
+    },
 }
 

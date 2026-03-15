@@ -7,7 +7,7 @@
 
 send_notification() {
 	brightness=$(printf "%.0f\n" "$(brillo -Gq)")
-	dunstify -a "changebrightness" -u low -r 9993 -h int:value:"$brightness" -i "brightness" "Brightness" "Currently at $brightness%" -t 2000
+	notify-send -a "changebrightness" -u low -r 9993 -h int:value:"$brightness" -i "/usr/share/icons/Adwaita/symbolic/status/display-brightness-symbolic.svg" "Brightness" "Currently at $brightness%" -t 500
 }
 
 case $1 in

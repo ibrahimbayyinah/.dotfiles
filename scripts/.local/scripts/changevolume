@@ -5,29 +5,52 @@
 # Increment, decrement, or mute the volume and send a notification
 # of the current volume level.
 
+ID="@DEFAULT_AUDIO_SINK@"
+
 send_notification() {
-	volume=$(pamixer --get-volume)
-	dunstify -a "changevolume" -u low -r 9993 -h int:value:"$volume" -i "volume" "Volume" "Currently at ${volume}%" -t 2000
+	# volume=$(pamixer --get-volume)
+	volume_text=$(wpctl get-volume ${ID})
+	# Removing the substring `Volume: `
+	volume="${volume_text##Volume: }"
+	notify-send -a "changevolume" -u low -r 9993 -h int:value:"$volume" -i "/usr/share/icons/Adwaita/symbolic/status/audio-volume-high-symbolic.svg" "Volume" "Currently at ${volume}%" -t 500
 }
 
 case $1 in
 up)
 	# Set the volume on (if it was muted)
-	pamixer -u
-	pamixer -i 5 --allow-boost
+	# pamixer -u
+	# pamixer -i 5 --allow-boost
+
+	# unmute
+	wpctl set-mute ${ID} 0
+	# increase volume by 0.5% with a limit up to 140%
+	wpctl set-volume -l 1.4 ${ID} 1%+
 	send_notification "$1"
 	;;
 down)
-	pamixer -u
-	pamixer -d 5 --allow-boost
+	# pamixer -u
+	# pamixer -d 5 --allow-boost
+
+	wpctl set-mute ${ID} 0
+	wpctl set-volume -l 1.4 ${ID} 1%-
 	send_notification "$1"
 	;;
 mute)
-	pamixer -t
-	if eval "$(pamixer --get-mute)"; then
-		dunstify -a "changevolume" -t 2000 -r 9993 -u low -i "volume-mute" "Volume" "Currently muted"
+	# pamixer -t
+	
+	# if eval "$(pamixer --get-mute)"; then
+		# send_notification -a "changevolume" -t 500 -r 9993 -u low -i "volume-mute" "Volume" "Currently muted"
+	# else
+		# send_notification up
+	# fi
+
+	wpctl set-mute ${ID} toggle
+	
+	vol_status=$(wpctl get-volume ${ID})
+	if [ -z "${vol_status##*MUTED*}" ]; then
+		notify-send -a "changevolume" -t 500 -r 9993 -u low -i "/usr/share/icons/Adwaita/symbolic/status/audio-volume-muted-symbolic.svg" "Volume" "MUTED"
 	else
-		send_notification up
+		notify-send -a "changevolume" -t 500 -r 9993 -u low -i "/usr/share/icons/Adwaita/symbolic/status/audio-volume-high-symbolic.svg" "Volume" "MUTED"
 	fi
 	;;
 esac

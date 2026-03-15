@@ -49,6 +49,9 @@ compinit -d $ZSH_ZCOMPDUMP # Put .zcompdump in user's cache dir
 _comp_options+=(globdots)
 export KEYTIMEOUT=1
 
+# pipx completions
+eval "$(register-python-argcomplete pipx)"
+
 # Use vim keys in tab complete menu:
 bindkey -M menuselect 'h' vi-backward-char
 bindkey -M menuselect 'k' vi-up-line-or-history
@@ -122,7 +125,7 @@ ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg[blue]%})"
 [ -d $HOME/.local/bin ] && [ -z $(echo $PATH | grep -o $HOME/.local/bin) ] && export PATH="$HOME/.local/bin:${PATH}"
 [ -d $HOME/bin ] && [ -z $(echo $PATH | grep -o $HOME/bin) ] && export PATH="$HOME/bin:${PATH}"
 # Idem with local scripts directory
-[ -d $HOME/.local/scripts ] && [ -z $(echo $PATH | grep -o $HOME/.local/scripts) ] && export PATH="$HOME/.local/scripts:${PATH}"
+[ -d /home/ibra/.local/scripts ] && [ -z $(echo $PATH | grep -o /home/ibra/.local/scripts) ] && export PATH="$HOME/.local/scripts:${PATH}"
 
 # Setting up environment variables for go:
 GOPATH="$HOME/programs/go/go_projects"; export GOPATH
@@ -193,6 +196,11 @@ export ANDROID_HOME="$HOME/builds/android/android_sdk"
 [ -d "$ANDROID_HOME/emulator" ] && PATH="$PATH:$ANDROID_HOME/emulator"; export PATH
 # End of android
 
+# TeX
+[ -d "$HOME/.local/share/texlive/2024/texmf-dist/doc/man" ] && PATH="$PATH:$HOME/.local/share/texlive/2024/texmf-dist/doc/man"; export PATH
+[ -d "$HOME/.local/share/texlive/2024/texmf-dist/doc/info" ] && PATH="$PATH:$HOME/.local/share/texlive/2024/texmf-dist/doc/info"; export PATH
+[ -d "$HOME/.local/share/texlive/2024/bin/x86_64-linux" ] && PATH="$PATH:$HOME/.local/share/texlive/2024/bin/x86_64-linux"; export PATH
+# End of TeX
 
 # Load zsh-syntax-highlighting; should be last (modified from Luke Smith's .zshrc to work with void):
 source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 2>/dev/null

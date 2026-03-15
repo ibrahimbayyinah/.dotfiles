@@ -1,0 +1,85 @@
+#!/bin/sh
+# pdfnup - Make an N-up PDF using system pdfjam/pdflatex (POSIX sh)
+
+usage() {
+  echo "Usage: ${0##*/} [-n ROWS] [-c COLS] [-s N] [-L] input.pdf" >&2
+  echo "  -n ROWS  Rows per sheet (default: 3)" >&2
+  echo "  -c COLS  Columns per sheet (default: 1)" >&2
+  echo "  -s N     Square layout NxN (sets COLS=N and ROWS=N)" >&2
+  echo "  -L       Landscape" >&2
+  echo "" >&2
+  echo "Examples:" >&2
+  echo "  ${0##*/} file.pdf                 # 1x3 -> file-3s.pdf" >&2
+  echo "  ${0##*/} -c 2 -n 3 file.pdf       # 2x3 -> file-6s.pdf" >&2
+  echo "  ${0##*/} -s 3 -L file.pdf         # 3x3 landscape -> file-9s.pdf" >&2
+  exit 2
+}
+
+cols=1
+rows=3
+landscape=0
+
+is_posint() {
+  case "$1" in
+    ''|*[!0-9]*) return 1 ;;
+  esac
+  [ "$1" -gt 0 ] 2>/dev/null
+}
+
+while getopts "n:c:s:Lh" opt; do
+  case "$opt" in
+    n) rows=$OPTARG ;;
+    c) cols=$OPTARG ;;
+    s) cols=$OPTARG; rows=$OPTARG ;;
+    L) landscape=1 ;;
+    h|\?) usage ;;
+  esac
+done
+shift $((OPTIND - 1))
+
+[ $# -eq 1 ] || usage
+in=$1
+
+# Must be a readable PDF file
+[ -r "$in" ] || { echo "Error: cannot read: $in" >&2; exit 1; }
+case "$in" in
+  *.pdf|*.PDF) ;;
+  *) echo "Error: input must be a PDF (*.pdf)" >&2; exit 1 ;;
+esac
+
+# Validate numbers
+is_posint "$cols" || { echo "Error: -c must be a positive integer" >&2; exit 1; }
+is_posint "$rows" || { echo "Error: -n must be a positive integer" >&2; exit 1; }
+
+perpage=$((cols * rows))
+
+# Output filename: append "-<perpage>s" before extension, keep same directory
+dir=${in%/*}
+base=${in##*/}
+name=${base%.*}
+ext=${base##*.}
+
+out="${name}-${perpage}s.${ext}"
+if [ "$dir" != "$in" ]; then
+  out="$dir/$out"
+fi
+
+# Force system TeX Live tools (avoid ~/.local/texlive shadowing)
+PDFJAM=/usr/bin/pdfjam
+PDFLATEX=/usr/bin/pdflatex
+
+[ -x "$PDFJAM" ] || { echo "Error: not found/executable: $PDFJAM" >&2; exit 1; }
+[ -x "$PDFLATEX" ] || { echo "Error: not found/executable: $PDFLATEX" >&2; exit 1; }
+
+# Build pdfjam args
+set -- --nup "${cols}x${rows}" --paper a4paper
+if [ "$landscape" -eq 1 ]; then
+  set -- "$@" --landscape
+fi
+set -- "$@" --outfile "$out" -- "$in"
+
+PATH=/usr/bin:$PATH \
+PDFJAM_PDFLATEX=$PDFLATEX \
+"$PDFJAM" "$@"
+
+echo "Wrote: $out"

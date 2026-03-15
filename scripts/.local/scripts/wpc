@@ -1,0 +1,101 @@
+#!/bin/sh
+
+# Check if running as root
+# if [ "$(id -u)" -ne 0 ]; then
+#     echo "This script must be run as root" >&2
+#     exit 1
+# fi
+
+# doas pkill wpa
+
+# Terminate any existing wpa_supplicant process
+if pgrep -x wpa_supplicant > /dev/null; then
+    echo "Stopping existing wpa_supplicant process..."
+    doas pkill -x wpa_supplicant
+    sleep 2  # Give it time to fully terminate
+fi
+
+# Extract the first argument
+arg="$1"
+
+# If there's a capital `D` in the argument, then don't run the script in BACKGROUND mode.
+if echo "$arg" | grep -q "D"; then
+    BACKGROUND=""
+    # Remove 'D' from the argument
+    arg=$(echo "$arg" | tr -d 'D')
+else
+    BACKGROUND="-B"
+fi
+
+# If no argument is left, list available config files and ask the user to choose.
+if [ -z "$arg" ]; then
+    echo "No profile provided. Available configurations:"
+    
+    configs=()
+    index=1
+
+    # Find .conf files and store them in an array
+    for file in /etc/wpa_supplicant/*.conf; do
+        [ -e "$file" ] || continue  # Skip if no .conf files are found
+        configs+=("$file")
+        echo "$index) $(basename "$file")"
+        index=$((index + 1))
+    done
+
+    if [ "${#configs[@]}" -eq 0 ]; then
+        echo "No configuration files found in /etc/wpa_supplicant."
+        exit 1
+    fi
+
+    # Ask the user to choose a config file
+    echo "Enter the number of the profile you want to use:"
+    read choice
+
+    if ! [ "$choice" -ge 1 ] 2>/dev/null || [ "$choice" -gt "${#configs[@]}" ]; then
+        echo "Invalid selection."
+        exit 1
+    fi
+
+    CONFIG="${configs[$((choice - 1))]}"
+else
+    # Define WiFi profiles based on the modified argument
+    case "$arg" in
+	# h) CONFIG="/etc/wpa_supplicant/orangebayt.conf" ;;
+	h) CONFIG="/etc/wpa_supplicant/wpa_supplicant_orange-d84a_20260124152504.conf" ;;
+	b) CONFIG="/etc/wpa_supplicant/vubnext.conf" ;;
+	r) CONFIG="/etc/wpa_supplicant/eduroam.conf" ;;
+	t) CONFIG="/etc/wpa_supplicant/moto.conf" ;;
+	m) CONFIG="/etc/wpa_supplicant/mam.conf" ;;
+	s) CONFIG="/etc/wpa_supplicant/toekomst-school.conf" ;;
+	j) CONFIG="/etc/wpa_supplicant/masjid.conf" ;;
+	mk) CONFIG="/etc/wpa_supplicant/muhsin.conf" ;;
+	mk2) CONFIG="/etc/wpa_supplicant/muhsin24.conf" ;;
+	a) CONFIG="/etc/wpa_supplicant/shabab.conf" ;;
+	z) CONFIG="/etc/wpa_supplicant/wpa_supplicant_bezoekers_wgc_20250401112931.conf" ;;
+	k) CONFIG="/etc/wpa_supplicant/wpa_supplicant_orange-daa1_20250414004148.conf" ;;
+        *)
+        echo "Usage: $0 [h|b|r|t|...][B] [additional wpa_supplicant args]"
+	    echo "no argument to choose config file manually"
+	    echo "a: shabab"
+	    echo "b: vubnext"
+	    echo "h: home"
+	    echo "j: masjid"
+	    echo "k: khaled bayt"
+	    echo "m: mam"
+	    echo "mk: muhsin"
+	    echo "mk2: muhsin24"
+	    echo "r: eduroam"
+	    echo "s: toekomst-school"
+	    echo "t: moto"
+	    echo "z: tijdelijk"
+            exit 1
+            ;;
+    esac
+fi
+
+# Shift to remove the first argument, passing the rest to wpa_supplicant
+shift
+
+# Run wpa_supplicant with the selected config and additional arguments
+echo "Starting wpa_supplicant with config: $CONFIG"
+exec doas wpa_supplicant -c "$CONFIG" -i wlan0 $BACKGROUND "$@"
