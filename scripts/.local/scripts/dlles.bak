@@ -1,0 +1,104 @@
+#!/bin/sh
+
+# Argument should be the request link to 1 or 2 .m3u8 file(s).
+# Usage: ./dlles [--preview] <URL1> [URL2]
+
+preview=false
+if [ "$1" = "--preview" ]; then
+    preview=true
+    shift
+fi
+
+if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+    echo "Usage: $0 [--preview] <master.m3u8 URL1> [master.m3u8 URL2]"
+    exit 1
+fi
+
+urls=("$@")
+# master_url="$1"
+current_datetime=$(date +"%Y-%m-%d_%H-%M-%S")
+output_filename="output_${current_datetime}.mp4"
+
+# --- Step 1: Probe streams for each URL ---
+i=0
+for url in "${urls[@]}"; do
+    echo
+    echo "===== Probing input #$i: $url ====="
+    ffmpeg -i "$url" 2>&1 | grep "Stream #"
+    i=$((i+1))
+done
+
+echo
+echo "You have ${#urls[@]} input(s)."
+echo "Choose streams using format: <input_index>:<stream_index> (e.g. 0:1)"
+echo "Or type 'none' to skip."
+echo
+
+# --- Step 2: Ask user which streams to use ---
+echo -n "Choose VIDEO stream (or 'none' to quit): "
+read videomap
+if [ "$videomap" = "none" ]; then
+    echo "No video chosen, exiting."
+    exit 0
+fi
+
+echo -n "Choose AUDIO stream (or 'none' for no audio): "
+read audiomap
+
+# Parse audio mapping into input index and stream index
+# audio_in="${audiomap%%:*}"   # e.g. 1
+# audio_stream="${audiomap##*:}" # e.g. 0, 1, 2, etc.
+# 
+# video_in="${videomap%%:*}"
+# video_stream="${videomap##*:}"
+
+# --- Step 3: Download chosen streams ---
+video_input_index="${videomap%%:*}" # remove longest match of the pattern after %%, starting from the end
+video_stream_index="${videomap##*:}" # remove longest match of the pattern after ##, starting from the beginning
+video_url="${urls[$video_input_index]}"
+
+echo "➡️  Video will be taken from input #$video_input_index ($video_url), stream index $video_stream_index"
+
+if [ "$audiomap" != "none" ]; then
+    audio_input_index="${audiomap%%:*}"
+    audio_stream_index="${audiomap##*:}"
+    audio_url="${urls[$audio_input_index]}"
+    echo "➡️  Audio will be taken from input #$audio_input_index ($audio_url), stream index $audio_stream_index"
+else
+    echo "➡️  No audio will be included."
+fi
+
+
+# --- Step 4: Build commands ---
+if [ "$audiomap" != "none" ]; then
+    cmd_audio="ffmpeg -i \"$audio_url\" -map \"0:$audio_stream_index\" -c copy audio_temp_${current_datetime}.m4a"
+fi
+cmd_video="ffmpeg -i \"$video_url\" -map \"0:$video_stream_index\" -c copy video_temp_${current_datetime}.mp4"
+
+if [ "$audiomap" = "none" ]; then
+    cmd_merge="mv video_temp_${current_datetime}.mp4 \"$output_filename\""
+else
+    cmd_merge="ffmpeg -i video_temp_${current_datetime}.mp4 -i audio_temp_${current_datetime}.m4a -c copy -map 0:v:0 -map 1:a:0 -bsf:a aac_adtstoasc \"$output_filename\" && rm -f audio_temp_${current_datetime}.m4a video_temp_${current_datetime}.mp4"
+fi
+
+# --- Step 5: Run or preview ---
+echo
+if $preview; then
+    echo "🔎 Preview mode: showing commands only"
+    [ -n "$cmd_audio" ] && echo "$cmd_audio"
+    echo "$cmd_video"
+    echo "$cmd_merge"
+else
+    echo "🚀 Running downloads..."
+    [ -n "$cmd_audio" ] && eval "$cmd_audio"
+    eval "$cmd_video"
+    eval "$cmd_merge"
+    echo "✅ Saved as $output_filename"
+fi
+
+# Always include the first audio stream
+# audiomap="0:a:0"
+
+# ffmpeg -i "$master_url" -map "$audiomap" -c copy audio_temp.m4a
+
+# ffmpeg -i "$master_url" -map "$audiomap" -c copy -bsf:a aac_adtstoasc "$output_filename"

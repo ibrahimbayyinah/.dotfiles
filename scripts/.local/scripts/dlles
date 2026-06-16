@@ -1,104 +1,285 @@
-#!/bin/sh
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Argument should be the request link to 1 or 2 .m3u8 file(s).
-# Usage: ./dlles [--preview] <URL1> [URL2]
+# Usage:
+#   Single job, interactive selection with defaults:
+#     ./dlles [--preview] <URL1> [URL2]
+#
+#   Batch mode from TSV:
+#     ./dlles [--preview] --tsv jobs.tsv
+#
+# TSV format: 3 columns, tab-separated
+#   URL1<TAB>URL2<TAB>output_filename
+#
+# Defaults:
+#   video map = 0:1
+#   audio map = 1:0
+#
+# Notes:
+# - In single-job mode, pressing Enter accepts the defaults.
+# - Type 'none' for audio to create a video-only output.
+# - In batch mode, the defaults are used automatically unless overridden by flags.
 
 preview=false
-if [ "$1" = "--preview" ]; then
-    preview=true
-    shift
-fi
+tsv_file=""
+default_video_map="0:1"
+default_audio_map="1:0"
 
-if [ $# -lt 1 ] || [ $# -gt 2 ]; then
-    echo "Usage: $0 [--preview] <master.m3u8 URL1> [master.m3u8 URL2]"
+usage() {
+    cat <<EOF
+Usage:
+  $0 [--preview] [--video-map N:M] [--audio-map N:M] <URL1> [URL2]
+  $0 [--preview] [--video-map N:M] [--audio-map N:M] --tsv jobs.tsv
+
+Options:
+  --preview         Show what would be done, but do not download/merge
+  --tsv FILE        Read jobs from a TSV file with 3 columns:
+                    URL1<TAB>URL2<TAB>output_filename
+  --video-map N:M   Default video stream map (default: ${default_video_map})
+  --audio-map N:M   Default audio stream map (default: ${default_audio_map})
+  -h, --help        Show this help
+
+Examples:
+  $0 "https://example/video1.m3u8" "https://example/video2.m3u8"
+  $0 --preview --tsv jobs.tsv
+  $0 --video-map 0:1 --audio-map 1:0 --tsv jobs.tsv
+EOF
+}
+
+die() {
+    echo "Error: $*" >&2
     exit 1
-fi
+}
 
-urls=("$@")
-# master_url="$1"
-current_datetime=$(date +"%Y-%m-%d_%H-%M-%S")
-output_filename="output_${current_datetime}.mp4"
+have_cmd() {
+    command -v "$1" >/dev/null 2>&1
+}
 
-# --- Step 1: Probe streams for each URL ---
-i=0
-for url in "${urls[@]}"; do
+is_valid_map() {
+    [[ "$1" =~ ^[0-9]+:[0-9]+$ ]]
+}
+
+probe_streams() {
+    local -a urls=("$@")
+    local i=0
+    local url
+
+    for url in "${urls[@]}"; do
+        [[ -n "$url" ]] || continue
+        echo
+        echo "===== Probing input #$i: $url ====="
+        # ffmpeg prints stream info to stderr
+        ffmpeg -nostdin -hide_banner -i "$url" 2>&1 | grep "Stream #" || true
+        i=$((i + 1))
+    done
+}
+
+cleanup_files=()
+cleanup() {
+    local f
+    for f in "${cleanup_files[@]:-}"; do
+        [[ -e "$f" ]] && rm -f -- "$f"
+    done
+}
+trap cleanup EXIT
+
+run_job() {
+    local url1="$1"
+    local url2="$2"
+    local output_filename="$3"
+    local interactive="$4"
+
+    [[ -n "$url1" ]] || die "First URL is empty."
+    [[ -n "$output_filename" ]] || die "Output filename is empty."
+
+    local -a urls=()
+    urls+=("$url1")
+    [[ -n "$url2" ]] && urls+=("$url2")
+
+    local videomap="$default_video_map"
+    local audiomap="$default_audio_map"
+
+    probe_streams "${urls[@]}"
+
     echo
-    echo "===== Probing input #$i: $url ====="
-    ffmpeg -i "$url" 2>&1 | grep "Stream #"
-    i=$((i+1))
-done
+    echo "You have ${#urls[@]} input(s)."
+    echo "Choose streams using format: <input_index>:<stream_index> (e.g. 0:1)"
+    echo "Type 'none' for audio if you want no audio."
 
-echo
-echo "You have ${#urls[@]} input(s)."
-echo "Choose streams using format: <input_index>:<stream_index> (e.g. 0:1)"
-echo "Or type 'none' to skip."
-echo
+    if [[ "$interactive" == "true" ]]; then
+        local input_video input_audio
 
-# --- Step 2: Ask user which streams to use ---
-echo -n "Choose VIDEO stream (or 'none' to quit): "
-read videomap
-if [ "$videomap" = "none" ]; then
-    echo "No video chosen, exiting."
-    exit 0
-fi
+        echo
+        read -r -p "Choose VIDEO stream [default: ${default_video_map}]: " input_video
+        videomap="${input_video:-$default_video_map}"
 
-echo -n "Choose AUDIO stream (or 'none' for no audio): "
-read audiomap
+        [[ "$videomap" != "none" ]] || die "Video cannot be 'none'."
 
-# Parse audio mapping into input index and stream index
-# audio_in="${audiomap%%:*}"   # e.g. 1
-# audio_stream="${audiomap##*:}" # e.g. 0, 1, 2, etc.
-# 
-# video_in="${videomap%%:*}"
-# video_stream="${videomap##*:}"
+        read -r -p "Choose AUDIO stream [default: ${default_audio_map}, or 'none']: " input_audio
+        audiomap="${input_audio:-$default_audio_map}"
+    else
+        echo
+        echo "Using default VIDEO stream: ${videomap}"
+        echo "Using default AUDIO stream: ${audiomap}"
+    fi
 
-# --- Step 3: Download chosen streams ---
-video_input_index="${videomap%%:*}" # remove longest match of the pattern after %%, starting from the end
-video_stream_index="${videomap##*:}" # remove longest match of the pattern after ##, starting from the beginning
-video_url="${urls[$video_input_index]}"
+    is_valid_map "$videomap" || die "Invalid video map '$videomap'. Expected format N:M."
+    [[ "$audiomap" == "none" ]] || is_valid_map "$audiomap" || die "Invalid audio map '$audiomap'. Expected format N:M or 'none'."
 
-echo "➡️  Video will be taken from input #$video_input_index ($video_url), stream index $video_stream_index"
+    local video_input_index video_stream_index video_url
+    video_input_index="${videomap%%:*}"
+    video_stream_index="${videomap##*:}"
 
-if [ "$audiomap" != "none" ]; then
-    audio_input_index="${audiomap%%:*}"
-    audio_stream_index="${audiomap##*:}"
-    audio_url="${urls[$audio_input_index]}"
-    echo "➡️  Audio will be taken from input #$audio_input_index ($audio_url), stream index $audio_stream_index"
-else
-    echo "➡️  No audio will be included."
-fi
+    [[ "$video_input_index" -lt "${#urls[@]}" ]] || die "Video input index '$video_input_index' out of range."
+    video_url="${urls[$video_input_index]}"
 
+    echo "➡️  Video: input #${video_input_index} (${video_url}), stream ${video_stream_index}"
 
-# --- Step 4: Build commands ---
-if [ "$audiomap" != "none" ]; then
-    cmd_audio="ffmpeg -i \"$audio_url\" -map \"0:$audio_stream_index\" -c copy audio_temp.m4a"
-fi
-cmd_video="ffmpeg -i \"$video_url\" -map \"0:$video_stream_index\" -c copy video_temp.mp4"
+    local audio_input_index="" audio_stream_index="" audio_url=""
+    if [[ "$audiomap" != "none" ]]; then
+        audio_input_index="${audiomap%%:*}"
+        audio_stream_index="${audiomap##*:}"
+        [[ "$audio_input_index" -lt "${#urls[@]}" ]] || die "Audio input index '$audio_input_index' out of range."
+        audio_url="${urls[$audio_input_index]}"
+        echo "➡️  Audio: input #${audio_input_index} (${audio_url}), stream ${audio_stream_index}"
+    else
+        echo "➡️  No audio will be included."
+    fi
 
-if [ "$audiomap" = "none" ]; then
-    cmd_merge="mv video_temp.mp4 \"$output_filename\""
-else
-    cmd_merge="ffmpeg -i video_temp.mp4 -i audio_temp.m4a -c copy -map 0:v:0 -map 1:a:0 -bsf:a aac_adtstoasc \"$output_filename\" && rm -f audio_temp.m4a video_temp.mp4"
-fi
+    local tmp_base video_temp audio_temp
+    tmp_base="$(mktemp -u "/tmp/dlles.XXXXXX")"
+    video_temp="${tmp_base}.video.mp4"
+    audio_temp="${tmp_base}.audio.m4a"
 
-# --- Step 5: Run or preview ---
-echo
-if $preview; then
-    echo "🔎 Preview mode: showing commands only"
-    [ -n "$cmd_audio" ] && echo "$cmd_audio"
-    echo "$cmd_video"
-    echo "$cmd_merge"
-else
-    echo "🚀 Running downloads..."
-    [ -n "$cmd_audio" ] && eval "$cmd_audio"
-    eval "$cmd_video"
-    eval "$cmd_merge"
+    cleanup_files+=("$video_temp" "$audio_temp")
+
+    echo
+    if $preview; then
+        echo "🔎 Preview mode"
+        echo "ffmpeg -nostdin -i \"$video_url\" -map \"0:${video_stream_index}\" -c copy \"$video_temp\""
+        if [[ "$audiomap" != "none" ]]; then
+            echo "ffmpeg -nostdin -i \"$audio_url\" -map \"0:${audio_stream_index}\" -c copy \"$audio_temp\""
+            echo "ffmpeg -nostdin -i \"$video_temp\" -i \"$audio_temp\" -c copy -map 0:v:0 -map 1:a:0 -bsf:a aac_adtstoasc \"$output_filename\""
+        else
+            echo "mv \"$video_temp\" \"$output_filename\""
+        fi
+        return 0
+    fi
+
+    echo "🚀 Downloading video..."
+    ffmpeg -nostdin -y -i "$video_url" -map "0:${video_stream_index}" -c copy "$video_temp"
+
+    if [[ "$audiomap" != "none" ]]; then
+        echo "🚀 Downloading audio..."
+        ffmpeg -nostdin -y -i "$audio_url" -map "0:${audio_stream_index}" -c copy "$audio_temp"
+
+        echo "🚀 Merging..."
+        ffmpeg -nostdin -y \
+            -i "$video_temp" \
+            -i "$audio_temp" \
+            -c copy \
+            -map 0:v:0 \
+            -map 1:a:0 \
+            -bsf:a aac_adtstoasc \
+            "$output_filename"
+    else
+        echo "🚀 Saving video-only output..."
+        mv -- "$video_temp" "$output_filename"
+    fi
+
     echo "✅ Saved as $output_filename"
-fi
+}
 
-# Always include the first audio stream
-# audiomap="0:a:0"
+parse_tsv() {
+    local file="$1"
+    [[ -f "$file" ]] || die "TSV file not found: $file"
 
-# ffmpeg -i "$master_url" -map "$audiomap" -c copy audio_temp.m4a
+    local line_no=0
+    local url1 url2 output
 
-# ffmpeg -i "$master_url" -map "$audiomap" -c copy -bsf:a aac_adtstoasc "$output_filename"
+    while IFS=$'\t' read -r url1 url2 output || [[ -n "${url1:-}" || -n "${url2:-}" || -n "${output:-}" ]]; do
+        line_no=$((line_no + 1))
+
+        # Skip completely empty lines
+        if [[ -z "${url1:-}" && -z "${url2:-}" && -z "${output:-}" ]]; then
+            continue
+        fi
+
+        # Require all 3 columns
+        [[ -n "${url1:-}" ]] || die "TSV line $line_no: first URL is empty."
+        [[ -n "${url2:-}" ]] || die "TSV line $line_no: second URL is empty."
+        [[ -n "${output:-}" ]] || die "TSV line $line_no: output filename is empty."
+
+        echo
+        echo "=============================="
+        echo "Processing TSV line $line_no"
+        echo "Output: $output"
+        echo "=============================="
+
+        run_job "$url1" "$url2" "$output" "false"
+    done < "$file"
+}
+
+main() {
+    have_cmd ffmpeg || die "ffmpeg is required but not installed."
+
+    local -a positional=()
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --preview)
+                preview=true
+                shift
+                ;;
+            --tsv)
+                [[ $# -ge 2 ]] || die "--tsv requires a file path."
+                tsv_file="$2"
+                shift 2
+                ;;
+            --video-map)
+                [[ $# -ge 2 ]] || die "--video-map requires a value like 0:1."
+                default_video_map="$2"
+                shift 2
+                ;;
+            --audio-map)
+                [[ $# -ge 2 ]] || die "--audio-map requires a value like 1:0."
+                default_audio_map="$2"
+                shift 2
+                ;;
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            *)
+                positional+=("$1")
+                shift
+                ;;
+        esac
+    done
+
+    is_valid_map "$default_video_map" || die "Invalid default video map '$default_video_map'."
+    [[ "$default_audio_map" == "none" ]] || is_valid_map "$default_audio_map" || die "Invalid default audio map '$default_audio_map'."
+
+    if [[ -n "$tsv_file" ]]; then
+        [[ "${#positional[@]}" -eq 0 ]] || die "Do not pass URLs when using --tsv."
+        parse_tsv "$tsv_file"
+        exit 0
+    fi
+
+    if [[ "${#positional[@]}" -lt 1 || "${#positional[@]}" -gt 2 ]]; then
+        usage
+        exit 1
+    fi
+
+    local url1="${positional[0]}"
+    local url2=""
+    [[ "${#positional[@]}" -eq 2 ]] && url2="${positional[1]}"
+
+    local current_datetime
+    current_datetime="$(date +"%Y-%m-%d_%H-%M-%S")"
+    local output_filename="output_${current_datetime}.mp4"
+
+    run_job "$url1" "$url2" "$output_filename" "true"
+}
+
+main "$@"
