@@ -1,6 +1,7 @@
 * {
   /* `otf-font-awesome` is required to be installed for icons */
   font-family: FontAwesome, Roboto, Helvetica, Arial, sans-serif;
+  /* font-family: "JetBrainsMono Nerd Font"; */
   font-size: 13px;
 }
 
@@ -72,7 +73,7 @@ button:hover {
   /* border: 1px solid red; */
 }
 
-/* 
+/*
 .modules-right {
   border: 1px solid red;
   border-radius: 10;
