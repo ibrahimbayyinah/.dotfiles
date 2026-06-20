@@ -1,15 +1,22 @@
-hl.on("hyprland.start", function()
-    hl.exec_cmd("mako & /usr/lib/polkit-kde-authentication-agent-1 & udiskie & waybar")
-    hl.exec_cmd("hyprpm reload -n")
-    hl.exec_cmd("~/.local/scripts/xdph-nuke.sh")
-    hl.exec_cmd("keepassxc", { workspace = "0" })
-    hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
-end)
+local statusbar = require("config.globals").statusbar
 
---[[
-local M = {
-    "mako & /usr/lib/polkit-kde-authentication-agent-1 & udiskie & waybar",
+local commands = {
+    "swaync & udiskie",
+    statusbar,
+    "systemctl --user start hyprpolkitagent",
+    "wl-paste --type text --watch cliphist store",
+    "wl-paste --type image --watch cliphist store",
+    "wl-clip-persist --clipboard regular",
     "hyprpm reload -n",
     "~/.local/scripts/xdph-nuke.sh",
+    "keepassxc",
+    "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
 }
---]]
+
+hl.on("hyprland.start", function()
+    for _, cmd in ipairs(commands) do
+        hl.exec_cmd(cmd)
+    end
+    -- hl.exec_cmd("keepassxc", { workspace = 0 })
+    -- wl-paste --type text --watch cliphist store
+end)
